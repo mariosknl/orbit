@@ -27,6 +27,10 @@ const AuthProvider = ({ children }) => {
     });
   };
 
+  const isAdmin = () => {
+    return authState.userInfo.role === "admin";
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
@@ -53,6 +57,7 @@ const AuthProvider = ({ children }) => {
         setAuthState: (authInfo) => setAuthInfo(authInfo),
         isAuthenticated,
         logout,
+        isAdmin,
       }}
     >
       {children}
