@@ -9,6 +9,7 @@ const cookieParser = require("cookie-parser");
 
 const dashboardData = require("./data/dashboard");
 const User = require("./data/User");
+const Token = require("./data/Token");
 const InventoryItem = require("./data/InventoryItem");
 const csrf = require("csurf");
 
