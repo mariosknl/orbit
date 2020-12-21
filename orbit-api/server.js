@@ -17,7 +17,12 @@ const csrfProtection = csrf({
   cookie: true,
 });
 
-const { createToken, hashPassword, verifyPassword } = require("./util");
+const {
+  createToken,
+  hashPassword,
+  verifyPassword,
+  getRefreshToken,
+} = require("./util");
 
 const app = express();
 
@@ -25,6 +30,19 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+const saveRefreshToken = async (refreshToken, userId) => {
+  try {
+    const storedRefreshToken = new Token({
+      refreshToken,
+      user: userId,
+    });
+
+    return await storedRefreshToken.save();
+  } catch (error) {
+    return error;
+  }
+};
 
 app.post("/api/authenticate", async (req, res) => {
   try {
@@ -51,7 +69,10 @@ app.post("/api/authenticate", async (req, res) => {
       const decodedToken = jwtDecode(token);
       const expiresAt = decodedToken.exp;
 
-      res.cookie("token", token, {
+      const refreshToken = getRefreshToken();
+      await saveRefreshToken(refreshToken, userInfo._id);
+
+      res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
       });
 
@@ -102,16 +123,20 @@ app.post("/api/signup", async (req, res) => {
       const decodedToken = jwtDecode(token);
       const expiresAt = decodedToken.exp;
 
-      const { firstName, lastName, email, role } = savedUser;
+      const { firstName, lastName, email, role, _id } = savedUser;
 
       const userInfo = {
+        _id,
         firstName,
         lastName,
         email,
         role,
       };
 
-      res.cookie("token", token, {
+      const refreshToken = getRefreshToken();
+      await saveRefreshToken(refreshToken, userInfo._id);
+
+      res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
       });
 
