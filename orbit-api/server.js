@@ -158,6 +158,38 @@ app.post("/api/signup", async (req, res) => {
   }
 });
 
+app.get("/api/token/refresh", async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Not Authorized" });
+    }
+
+    const userFromToken = await Token.findOne({
+      refreshToken,
+    }).select("user");
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Not Authorized" });
+    }
+
+    const user = await User.findOne({
+      _id: userFromToken.user,
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: "Not Authorized" });
+    }
+
+    const token = createToken(user);
+
+    return res.json({ token });
+  } catch (error) {
+    return res.status(400).json({ message: "Something went wrong" });
+  }
+});
+
 const attachUser = (req, res, next) => {
   const token = req.cookies.token;
   if (!token) {
