@@ -1,5 +1,6 @@
 import React, { useState, createContext } from "react";
 import { useHistory } from "react-router-dom";
+import { publicFetch } from "./../util/fetch";
 
 const AuthContext = createContext();
 const { Provider } = AuthContext;
@@ -33,19 +34,25 @@ const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("userInfo");
     localStorage.removeItem("expiresAt");
-    setAuthState({
-      token: null,
-      expiresAt: null,
-      userInfo: {},
-    });
+    setAuthState({});
     history.push("/login");
   };
 
   const isAuthenticated = () => {
-    if (!authState.token || !authState.expiresAt) {
-      return false;
+    // if (!authState.token || !authState.expiresAt) {
+    //   return false;
+    // }
+    // return new Date().getTime() / 1000 < authState.expiresAt;
+    return true;
+  };
+
+  const getNewToken = async () => {
+    try {
+      const { data } = await publicFetch.get("token/refresh");
+      setAuthState(Object.assign({}, authState, { token: data.token }));
+    } catch (error) {
+      return error;
     }
-    return new Date().getTime() / 1000 < authState.expiresAt;
   };
 
   return (
@@ -56,6 +63,7 @@ const AuthProvider = ({ children }) => {
         isAuthenticated,
         logout,
         isAdmin,
+        getNewToken,
       }}
     >
       {children}
